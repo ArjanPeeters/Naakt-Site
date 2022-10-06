@@ -18,14 +18,19 @@ session['toepassing'] = toepassing = database().Toepassing.unique()
 
 
 def callback_naam():
-    session.pop('kenmerk_gekozen')
-    session.pop('toepassing_gekozen')
+    if 'kenmerk_gekozen' in session:
+        session.pop('kenmerk_gekozen')
+    if 'toepassing_gekozen' in session:
+        session.pop('toepassing_gekozen')
 
 
 def reset():
-    session.pop('naam_gekozen')
-    session.pop('kenmerk_gekozen')
-    session.pop('toepassing_gekozen')
+    if 'naam_gekozen' in session:
+        session.pop('naam_gekozen')
+    if 'kenmerk_gekozen' in session:
+        session.pop('kenmerk_gekozen')
+    if 'toepassing_gekozen' in session:
+        session.pop('toepassing_gekozen')
 
 
 def copy2clipboard():
