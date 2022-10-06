@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import clipboard
+import pyperclip
 
 session = st.session_state
 # set the lists for Naam Kenmerk en Toepassing in the session state
@@ -35,7 +35,7 @@ def copy2clipboard():
         naam=session['naam_gekozen'] if 'naam_gekozen' in session else '',
         kenmerk=session['kenmerk_gekozen'] if 'kenmerk_gekozen' in session else '',
         toepassing=session['toepassing_gekozen'] if 'toepassing_gekozen' in session else '')
-    clipboard.copy(naakt)
+    pyperclip.copy(naakt)
     st.success('gekopieerd naar clipboard: {}'.format(naakt))
 
 
