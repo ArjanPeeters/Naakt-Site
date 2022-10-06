@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import clipboard
 
 session = st.session_state
 # set the lists for Naam Kenmerk en Toepassing in the session state
@@ -11,10 +12,6 @@ def database():
         session['database'] = pd.read_json(path)
 
     return session['database']
-
-session['naam'] = database().Naam.unique()
-session['kenmerk'] = database().Kenmerk.unique()
-session['toepassing'] = toepassing = database().Toepassing.unique()
 
 
 def callback_naam():
@@ -34,12 +31,12 @@ def reset():
 
 
 def copy2clipboard():
-
     naakt = '{naam}_{kenmerk}_{toepassing}'.format(
         naam=session['naam_gekozen'] if 'naam_gekozen' in session else '',
         kenmerk=session['kenmerk_gekozen'] if 'kenmerk_gekozen' in session else '',
-        toepassing=session['toepassing_gekozen'] if 'toepassing_gekozen' in session else ''
-    st.success('gekopieerd')
+        toepassing=session['toepassing_gekozen'] if 'toepassing_gekozen' in session else '')
+    clipboard.copy(naakt)
+    st.success('gekopieerd naar clipboard: {}'.format(naakt))
 
 
 def main():
@@ -47,13 +44,12 @@ def main():
     #set the page config
     st.set_page_config(
         layout="wide",
-        page_title="Naa.K.T. generator",
-        page_icon="✍️",
+        page_title="Naa.K.T. generator"
     )
     st.image('Logo NAA.K.T.png')
 
     # build up main selectors in 3 big columns and 2 small columns for the '_'
-    reset_col, col1, col2, col3, col4, col5, copy_col = st.columns([1,4, 1, 4, 1, 4,1])
+    reset_col, col1, col2, col3, col4, col5, copy_col = st.columns([2, 8, 1, 8, 1, 8, 2])
     with col1:
         st.markdown("""<div style="text-align: right"><h1> {} </h1></div><br>""".format(session['naam_gekozen']if 'naam_gekozen' in session else 'Naam'), unsafe_allow_html=True)
         naam = st.selectbox('Naam', options=database()['Naam'].unique(), label_visibility='collapsed', key='naam_gekozen', on_change=callback_naam)
