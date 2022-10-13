@@ -4,6 +4,7 @@ import ifcopenshell.util.element as ue
 from HomePage import database, naakt, callback_naam
 import pandas as pd
 from easygui import filesavebox
+import easygui
 
 session = st.session_state
 
