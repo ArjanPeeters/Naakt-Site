@@ -4,12 +4,6 @@ import ifcopenshell.util.element as ue
 from HomePage import database, naakt, callback_naam
 import pandas as pd
 from tkinter.filedialog import asksaveasfilename
-import os
-
-if os.environ.get('DISPLAY','') == '':
-    print('no display found. Using :0.0')
-    os.environ.__setitem__('DISPLAY', ':0.0')
-
 
 session = st.session_state
 
@@ -26,16 +20,6 @@ def change():
     session['material_changes'][session['material_choice']] = naakt()
     st.sidebar.success('{old} -> {new}'.format(old=session['material_choice'], new=naakt()))
     session['materials'].change_name(session['material_choice'], naakt())
-
-
-def save_to_file():
-    filename = session['uploaded_file'].name[:-4]
-    new_filename = asksaveasfilename(initialfile="{}_aangepast.ifc".format(filename),
-                                     filetypes=[('ifc', '*.ifc')])
-    if new_filename is not None:
-        with st.spinner('saving...'):
-            session['ifc_file'].write(new_filename)
-        st.balloons()
 
 
 class Materials:
@@ -102,7 +86,12 @@ def main():
         session['materials'] = Materials()
         st.radio('kies', session['materials'].material_names, key='material_choice')
 
-        st.sidebar.button('save to IFC', on_click=save_to_file)
+        test = st.sidebar.button('Maak download aan')
+        if test:
+            filename = f'{session.uploaded_file.name[:-4]}_aangepast.ifc'
+            st.sidebar.download_button(label='download IFC', data=session['ifc_file'].to_string(), mime='text/plain',
+                                        file_name=filename)
+        # st.sidebar.button('save to IFC', on_click=save_to_file)
 
         #st.write(session.material_changes)
 
