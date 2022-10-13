@@ -3,8 +3,7 @@ import ifcopenshell
 import ifcopenshell.util.element as ue
 from HomePage import database, naakt, callback_naam
 import pandas as pd
-from easygui import filesavebox
-import easygui
+from tkinter.filedialog import asksaveasfilename
 
 session = st.session_state
 
@@ -24,10 +23,9 @@ def change():
 
 
 def save_to_file():
-    filename = session['uploaded_file'].name # [:-4]
-    print(filename)
-    new_filename = filesavebox(title='Save IFC', default="{}_aangepast.ifc".format(filename),
-                               filetypes=['ifc'])
+    filename = session['uploaded_file'].name[:-4]
+    new_filename = asksaveasfilename(initialfile="{}_aangepast.ifc".format(filename),
+                                     filetypes=[('ifc', '*.ifc')])
     if new_filename is not None:
         with st.spinner('saving...'):
             session['ifc_file'].write(new_filename)
