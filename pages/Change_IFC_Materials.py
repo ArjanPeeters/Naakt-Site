@@ -3,7 +3,6 @@ import ifcopenshell
 import ifcopenshell.util.element as ue
 from HomePage import database, naakt, callback_naam
 import pandas as pd
-from tkinter.filedialog import asksaveasfilename
 
 session = st.session_state
 
@@ -89,7 +88,8 @@ def main():
         test = st.sidebar.button('Maak download aan')
         if test:
             filename = f'{session.uploaded_file.name[:-4]}_aangepast.ifc'
-            st.sidebar.download_button(label='download IFC', data=session['ifc_file'].to_string(), mime='text/plain',
+            data = session['ifc_file'].to_string()
+            st.sidebar.download_button(label='download IFC', data=data, mime='text/plain',
                                         file_name=filename)
         # st.sidebar.button('save to IFC', on_click=save_to_file)
 
