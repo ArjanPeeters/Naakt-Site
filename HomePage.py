@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import ifcopenshell
 import ifcopenshell.util.element as ue
+import csv
 
 session = st.session_state
 
@@ -17,17 +18,21 @@ def database():
 def callback_upload():
     session['is_file_uploaded'] = True
     try:
-        session['ifc_file'] = ifcopenshell.file.from_string(session['uploaded_file'].getvalue().decode('utf-8'))
+        session['ifc_file'] = ifcopenshell.file.from_string(session['uploaded_ifc_file'].getvalue().decode('utf-8'))
     except AttributeError:
         st.error('Upload nieuwe file')
 
 
-def change():
+def change(old=None, new=None):
+
+    old_material = old if old is not None else session['material_choice']
+    new_material = new if new is not None else naakt()
+
     if 'material_changes' not in session:
         session['material_changes'] = {}
-    session['material_changes'][session['material_choice']] = naakt()
-    st.sidebar.success('{old} -> {new}'.format(old=session['material_choice'], new=naakt()))
-    session['materials'].change_name(session['material_choice'], naakt())
+    session['material_changes'][old_material] = new_material
+    st.success('{old} -> {new}'.format(old=old_material, new=new_material))
+    session['materials'].change_name(old_material, new_material)
 
 
 def naakt(return_dict=None):
@@ -82,8 +87,17 @@ def reset_list():
     session.save_list = []
 
 
+def upload_changes():
+    change_dict = pd.read_csv(session['uploaded_csv_file']).to_dict('records')
+    counter = 0
+    for material_change in change_dict:
+        change(old=material_change['oud'], new=material_change['nieuw'])
+        counter += 1
+    st.success(f'{counter} materialen aangepast')
+
+
 def file_uploaded():
-    if 'is_file_uploaded' in session and session['uploaded_file'] is not None:
+    if 'is_file_uploaded' in session and session['uploaded_ifc_file'] is not None:
         return True
     else:
         return False
@@ -103,12 +117,14 @@ class Materials:
         self.material_names = list(self.data.keys())
 
     def change_name(self, old_name, new_name):
-        if old_name in self.data.keys():
+        if old_name in self.material_names:
             self.data[old_name].Name = new_name
 
             if 'changed_items' not in session:
                 session['changed_items'] = {}
             session['changed_items'][old_name] = new_name
+        elif new_name in self.material_names:
+            st.warning(f'{old_name} is al aangepast voor {new_name}')
         else:
             st.error(f'{old_name} bestaat niet')
 
@@ -125,7 +141,7 @@ def main():
 
     st.sidebar.write('maak een NAA.K.T materiaal benaning aan')
     st.sidebar.write('of verander materialen van een ifc')
-    st.sidebar.file_uploader('upload ifc', type=['ifc', 'ifczip'], key='uploaded_file',
+    st.sidebar.file_uploader('upload ifc', type=['ifc', 'ifczip'], key='uploaded_ifc_file',
                              on_change=callback_upload, label_visibility='collapsed')
 
     if not file_uploaded():
@@ -198,11 +214,26 @@ def main():
 
         download_ready = st.sidebar.button('Maak IFC download aan')
         if download_ready:
-            filename = f'{session.uploaded_file.name[:-4]}_aangepast.ifc'
+            filename = f'{session.uploaded_ifc_file.name[:-4]}_aangepast.ifc'
             data = session['ifc_file'].to_string()
             st.sidebar.download_button(label='download IFC', data=data, mime='text/plain',
                                        file_name=filename)
+
+        col_upload_changes, col_download_changes = st.columns(2)
+
+        with col_upload_changes:
+            st.write('Upload csv bestand met aanpassingen')
+            st.file_uploader('upload csv', key='uploaded_csv_file', type=['.txt', '.csv'],
+                             on_change=upload_changes, label_visibility='collapsed')
+
         if 'changed_items' in session:
+            with col_download_changes:
+                st.write('download aanpassingen voor hergebruik')
+                temp_dict = {'oud': session['changed_items'].keys(), 'nieuw': session['changed_items'].values()}
+                csv_file = pd.DataFrame(temp_dict).to_csv().encode('utf-8')
+                fn = f'Aanpassingen_{session.uploaded_ifc_file.name[:-4]}.csv'
+                st.download_button(label='download aanpassingen', data=csv_file, mime='application/octet-stream',
+                                   file_name=fn)
             st.subheader('Aangepaste materialen:')
             st.write('Oud: Nieuw')
             st.write(session['changed_items'])
