@@ -21,6 +21,7 @@ def callback_upload():
     except AttributeError:
         st.error('Upload nieuwe file')
 
+
 def change():
     if 'material_changes' not in session:
         session['material_changes'] = {}
@@ -122,7 +123,7 @@ def main():
     material_body = st.container()
     save_body = st.container()
 
-    st.sidebar.write('maak een NAAK.K.T materiaal benaning aan')
+    st.sidebar.write('maak een NAA.K.T materiaal benaning aan')
     st.sidebar.write('of verander materialen van een ifc')
     st.sidebar.file_uploader('upload ifc', type=['ifc', 'ifczip'], key='uploaded_file',
                              on_change=callback_upload, label_visibility='collapsed')
