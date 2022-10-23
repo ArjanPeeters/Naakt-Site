@@ -220,7 +220,7 @@ def main():
                 with left:
                     st.button('Empty', key='reset_list_pressed', on_click=reset_list)
 
-    st.write(session)
+    #st.write(session)
 
 
 if __name__ == "__main__":
