@@ -148,14 +148,21 @@ def main():
                 """
                 st.markdown(naakt_explain)
     else:
-        st.header('Verander de materialen NAA.K.T. benamingen' if 'is_file_uploaded' not in session else
-                  "{name} - {longname}".format(name=session['ifc_file'].by_type('IfcProject')[0].Name,
-                                               longname=session['ifc_file'].by_type('IfcProject')[0].LongName))
+        with header_body:
+
+            st.header("{name} - {longname}".format(name=session['ifc_file'].by_type('IfcProject')[0].Name,
+                                                   longname=session['ifc_file'].by_type('IfcProject')[0].LongName))
+            if 'material_choice' in session:
+                st.subheader('Verander: ' + session['material_choice'])
+                st.subheader('Naar: ' + naakt())
+            else:
+                st.subheader('Kies een materiaal')
 
 
     with material_body:
 
-        st.code(naakt())
+        if not file_uploaded():
+            st.code(naakt())
         # build up main selectors in 3 big columns and 2 small columns for the '_'
         col1, col2, col3, col_plus, col_button = st.columns([4, 4, 4, 1, 1])
         with col1:
@@ -212,7 +219,7 @@ def main():
                 with left:
                     st.button('Empty', key='reset_list_pressed', on_click=reset_list)
 
-
+    st.write(session)
 
 
 if __name__ == "__main__":
