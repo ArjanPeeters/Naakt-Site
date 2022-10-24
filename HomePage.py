@@ -3,8 +3,14 @@ import pandas as pd
 import ifcopenshell
 import ifcopenshell.util.element as ue
 import csv
+import pyairtable as at
 
 session = st.session_state
+table = at.Table(
+    api_key=st.secrets['airtable_key'],
+    base_id=st.secrets['naakt_db'],
+    table_name='Naakt DB'
+)
 
 
 def database():
@@ -34,6 +40,15 @@ def change(old=None, new=None):
     st.success('{old} -> {new}'.format(old=old_material, new=new_material))
     session['materials'].change_name(old_material, new_material)
 
+    split_name = new_material.split('_')
+    send_dict = {}
+    _keys = ['naam', 'kenmerk', 'toepassing', 'extra_veld1', 'extra_veld2', 'extra_veld3']
+    for field in range(len(split_name)):
+        send_dict[_keys[field]] = split_name[field]
+    send_dict['oude_benaming'] = old_material
+    send_dict['benaming'] = new_material
+    table.create(send_dict)
+
 
 def naakt(return_dict=None):
     naam = session['naam_chosen'] if 'naam_chosen' in session else ''
@@ -42,17 +57,21 @@ def naakt(return_dict=None):
     ef1 = '_' + session['extra_field1'].lower().replace(' ', '-') if 'extra_field1' in session else ''
     ef2 = '_' + session['extra_field2'].lower().replace(' ', '-') if 'extra_field2' in session else ''
     ef3 = '_' + session['extra_field3'].lower().replace(' ', '-') if 'extra_field3' in session else ''
-    if return_dict:
-        return {
+    naakt_string = f'{naam}_{kenmerk}_{toepassing}{ef1}{ef2}{ef3}'
+    naakt_dict = {
+            'benaming': naakt_string,
             'naam': naam,
             'kenmerk': kenmerk,
             'toepassing': toepassing,
-            'extra_veld1': ef1,
-            'extra_veld2': ef2,
-            'extra_veld3': ef3
+            'extra_veld1': ef1[1:],
+            'extra_veld2': ef2[1:],
+            'extra_veld3': ef3[1:]
         }
+
+    if return_dict:
+        return naakt_dict
     else:
-        return f'{naam}_{kenmerk}_{toepassing}{ef1}{ef2}{ef3}'
+        return naakt_string
 
 
 def callback_naam():
@@ -81,6 +100,7 @@ def save():
     if 'save_list' not in session:
         session.save_list = []
     session.save_list.insert(0, naakt())
+    table.create(naakt(return_dict=True))
 
 
 def reset_list():
@@ -93,6 +113,7 @@ def upload_changes():
     for material_change in change_dict:
         change(old=material_change['oud'], new=material_change['nieuw'])
         counter += 1
+
     st.success(f'{counter} materialen aangepast')
 
 
