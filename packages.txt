@@ -1,2 +1,0 @@
-libtk8.6
-xvfb
