@@ -93,6 +93,8 @@ def plus_pressed():
 
 def min_pressed():
     if 'added_columns' in session:
+        field = f"extra_field{session['added_columns']}"
+        session.pop(field)
         session['added_columns'] -= 1
 
 
@@ -101,6 +103,10 @@ def save():
         session.save_list = []
     session.save_list.insert(0, naakt())
     table.create(naakt(return_dict=True))
+    if session['reset on save']:
+        session['extra_field1'] = ''
+        session['extra_field2'] = ''
+        session['extra_field3'] = ''
 
 
 def reset_list():
@@ -160,7 +166,7 @@ def main():
     material_body = st.container()
     save_body = st.container()
 
-    st.sidebar.write('maak een NAA.K.T materiaal benaning aan')
+    st.sidebar.write('maak een NAA.K.T materiaal benaming aan')
     st.sidebar.write('of verander materialen van een ifc')
     st.sidebar.file_uploader('upload ifc', type=['ifc', 'ifczip'], key='uploaded_ifc_file',
                              on_change=callback_upload, label_visibility='collapsed')
@@ -196,13 +202,12 @@ def main():
             else:
                 st.subheader('Kies een materiaal')
 
-
     with material_body:
 
         if not file_uploaded():
             st.code(naakt())
         # build up main selectors in 3 big columns and 2 small columns for the '_'
-        col1, col2, col3, col_plus, col_button = st.columns([4, 4, 4, 1, 1])
+        col1, col2, col3, col_plus, col_button = st.columns([4, 4, 4, 1, 2])
         with col1:
             naam = st.selectbox('Naam', options=database()['Naam'].unique(), label_visibility='collapsed', key='naam_chosen', on_change=callback_naam)
             if 'added_columns' in session and session['added_columns'] > 0:
@@ -226,6 +231,7 @@ def main():
         with col_button:
             if not file_uploaded():
                 st.button('Save', key='save_pressed', on_click=save)
+                st.checkbox('reset on save', key='reset on save')
             else:
                 st.button('Change', key='change_pressed', on_click=change)
 
@@ -272,7 +278,7 @@ def main():
                 with left:
                     st.button('Empty', key='reset_list_pressed', on_click=reset_list)
 
-    #st.write(session)
+    st.write(session)
 
 
 if __name__ == "__main__":
