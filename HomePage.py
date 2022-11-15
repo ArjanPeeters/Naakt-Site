@@ -6,11 +6,15 @@ import csv
 import pyairtable as at
 
 session = st.session_state
-table = at.Table(
-    api_key=st.secrets['airtable_key'],
-    base_id=st.secrets['naakt_db'],
-    table_name='Naakt DB'
-)
+
+
+@st.experimental_singleton
+def table():
+    return at.Table(
+        api_key=st.secrets['airtable_key'],
+        base_id=st.secrets['naakt_db'],
+        table_name='Naakt DB'
+    )
 
 
 def database():
@@ -31,7 +35,6 @@ def callback_upload():
 
 
 def change(old=None, new=None):
-
     old_material = old if old is not None else session['material_choice']
     new_material = new if new is not None else naakt()
 
@@ -48,7 +51,7 @@ def change(old=None, new=None):
         send_dict[_keys[field]] = split_name[field]
     send_dict['oude_benaming'] = old_material
     send_dict['benaming'] = new_material
-    table.create(send_dict)
+    table().create(send_dict)
 
 
 def naakt(return_dict=None):
@@ -60,14 +63,14 @@ def naakt(return_dict=None):
     ef3 = '_' + session['extra_field3'].lower().replace(' ', '-') if 'extra_field3' in session else ''
     naakt_string = f'{naam}_{kenmerk}_{toepassing}{ef1}{ef2}{ef3}'
     naakt_dict = {
-            'benaming': naakt_string,
-            'naam': naam,
-            'kenmerk': kenmerk,
-            'toepassing': toepassing,
-            'extra_veld1': ef1[1:],
-            'extra_veld2': ef2[1:],
-            'extra_veld3': ef3[1:]
-        }
+        'benaming': naakt_string,
+        'naam': naam,
+        'kenmerk': kenmerk,
+        'toepassing': toepassing,
+        'extra_veld1': ef1[1:],
+        'extra_veld2': ef2[1:],
+        'extra_veld3': ef3[1:]
+    }
 
     if return_dict:
         return naakt_dict
@@ -103,7 +106,7 @@ def save():
     if 'save_list' not in session:
         session.save_list = []
     session.save_list.insert(0, naakt())
-    table.create(naakt(return_dict=True))
+    table().create(naakt(return_dict=True))
     if session['reset on save']:
         session['extra_field1'] = ''
         session['extra_field2'] = ''
@@ -158,7 +161,6 @@ class Materials:
 
 
 def main():
-
     st.set_page_config(
         layout="wide",
         page_title="Naa.K.T. generator")
@@ -176,7 +178,6 @@ def main():
         with header_body:
             st.image('Logo NAA.K.T.png')
             with st.expander('Over NAA.K.T.'):
-
                 naakt_explain = """
                 # NAA.K.T. Eenduidige materiaalbenaming
                 ## HÉT EZELSBRUGGETJE VOOR EENDUIDIGE MATERIAALBENAMING
@@ -210,17 +211,20 @@ def main():
         # build up main selectors in 3 big columns and 2 small columns for the '_'
         col1, col2, col3, col_plus, col_button = st.columns([4, 4, 4, 1, 2])
         with col1:
-            naam = st.selectbox('Naam', options=database()['Naam'].unique(), label_visibility='collapsed', key='naam_chosen', on_change=callback_naam)
+            naam = st.selectbox('Naam', options=database()['Naam'].unique(), label_visibility='collapsed',
+                                key='naam_chosen', on_change=callback_naam)
             if 'added_columns' in session and session['added_columns'] > 0:
                 st.text_input('vul in:', value='extra-veld-1', key='extra_field1', label_visibility='collapsed')
 
         with col2:
-            st.selectbox('Kenmerk', options=database().loc[database()['Naam'] == naam, 'Kenmerk'].unique(), label_visibility='collapsed', key='kenmerk_chosen')
+            st.selectbox('Kenmerk', options=database().loc[database()['Naam'] == naam, 'Kenmerk'].unique(),
+                         label_visibility='collapsed', key='kenmerk_chosen')
             if 'added_columns' in session and session['added_columns'] > 1:
                 st.text_input('test', value='extra-veld-2', key='extra_field2', label_visibility='collapsed')
 
         with col3:
-            st.selectbox('Toepassing', options=database().loc[database()['Naam'] == naam, 'Toepassing'].unique(), label_visibility='collapsed', key='toepassing_chosen')
+            st.selectbox('Toepassing', options=database().loc[database()['Naam'] == naam, 'Toepassing'].unique(),
+                         label_visibility='collapsed', key='toepassing_chosen')
             if 'added_columns' in session and session['added_columns'] > 2:
                 st.text_input('test', value='extra-veld-3', key='extra_field3', label_visibility='collapsed')
 
@@ -279,7 +283,7 @@ def main():
                 with left:
                     st.button('Empty', key='reset_list_pressed', on_click=reset_list)
 
-    #st.write(session)
+    # st.write(session)
 
 
 if __name__ == "__main__":
