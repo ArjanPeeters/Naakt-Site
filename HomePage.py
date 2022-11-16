@@ -173,6 +173,10 @@ def main():
     st.sidebar.write('of verander materialen van een ifc')
     st.sidebar.file_uploader('upload ifc', type=['ifc', 'ifczip'], key='uploaded_ifc_file',
                              on_change=callback_upload, label_visibility='collapsed')
+    sidebar_downloader = st.sidebar.container()  # for later filling with download buttons
+    st.sidebar.markdown('---')
+    st.sidebar.write('made by')
+    st.sidebar.write(f"primaryColor; {st.get_option('theme.primaryColor')}")
 
     if not file_uploaded():
         with header_body:
@@ -243,11 +247,11 @@ def main():
         session['materials'] = Materials()
         st.radio('kies', session['materials'].material_names, key='material_choice')
 
-        download_ready = st.sidebar.button('Maak IFC download aan')
+        download_ready = sidebar_downloader.button('Maak IFC download aan')
         if download_ready:
             filename = f'{session.uploaded_ifc_file.name[:-4]}_aangepast.ifc'
             data = session['ifc_file'].to_string()
-            st.sidebar.download_button(label='download IFC', data=data, mime='text/plain',
+            sidebar_downloader.download_button(label='download IFC', data=data, mime='text/plain',
                                        file_name=filename)
 
         col_upload_changes, col_download_changes = st.columns(2)

@@ -10,4 +10,4 @@ gen
 #IFC test files
 *.ifc
 test*
-/.streamlit/
+secrets.toml
