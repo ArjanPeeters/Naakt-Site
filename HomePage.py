@@ -4,6 +4,7 @@ import ifcopenshell
 import ifcopenshell.util.element as ue
 import csv
 import pyairtable as at
+import streamlit_nested_layout
 
 session = st.session_state
 
@@ -160,9 +161,7 @@ class Materials:
 
 
 def main():
-    st.set_page_config(
-        layout="wide",
-        page_title="Naa.K.T. generator")
+    st.set_page_config(page_title="Naa.K.T. Materiaal benaming")
 
     header_body = st.container()
     material_body = st.container()
@@ -222,37 +221,54 @@ def main():
 
         if not file_uploaded():
             st.code(naakt())
+
         # build up main selectors in 3 big columns and 2 small columns for the '_'
-        col1, col2, col3, col_plus, col_button = st.columns([4, 4, 4, 1, 2])
-        with col1:
-            naam = st.selectbox('Naam', options=database()['Naam'].unique(), label_visibility='collapsed',
-                                key='naam_chosen', on_change=callback_naam)
-            if 'added_columns' in session and session['added_columns'] > 0:
-                st.text_input('vul in:', value='extra-veld-1', key='extra_field1', label_visibility='collapsed')
 
-        with col2:
-            st.selectbox('Kenmerk', options=database().loc[database()['Naam'] == naam, 'Kenmerk'].unique(),
-                         label_visibility='collapsed', key='kenmerk_chosen')
+        outer_cols = st.columns([12, 3])
+
+        with outer_cols[0]:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                naam = st.selectbox('Naam', options=database()['Naam'].unique(), label_visibility='collapsed',
+                                    key='naam_chosen', on_change=callback_naam)
+
+            with col2:
+                st.selectbox('Kenmerk', options=database().loc[database()['Naam'] == naam, 'Kenmerk'].unique(),
+                             label_visibility='collapsed', key='kenmerk_chosen')
+
+            with col3:
+                st.selectbox('Toepassing', options=database().loc[database()['Naam'] == naam, 'Toepassing'].unique(),
+                             label_visibility='collapsed', key='toepassing_chosen')
+
+            col_add1, col_add2, col_add3 = st.columns(3)
+
+            if 'added_columns' in session and session['added_columns'] > 0:
+                with col_add1:
+                    st.text_input('vul in:', value='extra-veld-1', key='extra_field1', label_visibility='collapsed')
+
             if 'added_columns' in session and session['added_columns'] > 1:
-                st.text_input('test', value='extra-veld-2', key='extra_field2', label_visibility='collapsed')
+                with col_add2:
+                    st.text_input('test', value='extra-veld-2', key='extra_field2', label_visibility='collapsed')
 
-        with col3:
-            st.selectbox('Toepassing', options=database().loc[database()['Naam'] == naam, 'Toepassing'].unique(),
-                         label_visibility='collapsed', key='toepassing_chosen')
             if 'added_columns' in session and session['added_columns'] > 2:
-                st.text_input('test', value='extra-veld-3', key='extra_field3', label_visibility='collapsed')
+                with col_add3:
+                    st.text_input('test', value='extra-veld-3', key='extra_field3', label_visibility='collapsed')
 
-        with col_plus:
-            st.button('+', key='plus_pressed', on_click=plus_pressed)
-            if 'added_columns' in session and session['added_columns'] > 0:
-                st.button('-', on_click=min_pressed)
+        with outer_cols[1]:
+            col_plus, col_button = st.columns([1, 2])
+            with col_plus:
+                st.button('+', key='plus_pressed', on_click=plus_pressed)
+                if 'added_columns' in session and session['added_columns'] > 0:
+                    st.button('-', on_click=min_pressed)
 
-        with col_button:
-            if not file_uploaded():
-                st.button('Save', key='save_pressed', on_click=save)
-                st.checkbox('reset on save', key='reset on save')
-            else:
-                st.button('Change', key='change_pressed', on_click=change)
+            with col_button:
+                if not file_uploaded():
+                    st.button('Save', key='save_pressed', on_click=save)
+                    st.checkbox('reset on save', key='reset on save')
+                else:
+                    st.button('Change', key='change_pressed', on_click=change)
+
+        # Make extra section with columns so it builds up normaly on small screen width
 
     if file_uploaded():
         session['materials'] = Materials()
