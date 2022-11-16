@@ -175,8 +175,9 @@ def main():
                              on_change=callback_upload, label_visibility='collapsed')
     sidebar_downloader = st.sidebar.container()  # for later filling with download buttons
     st.sidebar.markdown('---')
-    st.sidebar.write('made by')
-    st.sidebar.write(f"primaryColor; {st.get_option('theme.primaryColor')}")
+    st.sidebar.markdown('&emsp;gemaakt door:')
+    st.sidebar.image('BIMnerd_Logo.png')
+
 
     if not file_uploaded():
         with header_body:
