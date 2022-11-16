@@ -25,7 +25,6 @@ def database():
     return session['database']
 
 
-@st.cache
 def callback_upload():
     session['is_file_uploaded'] = True
     try:
