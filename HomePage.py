@@ -175,6 +175,16 @@ def main():
                              on_change=callback_upload, label_visibility='collapsed')
     sidebar_downloader = st.sidebar.container()  # for later filling with download buttons
     st.sidebar.markdown('---')
+    with st.sidebar.expander('site analitycs'):
+        analitics = """
+        ## Modellen
+        Modellen die geupload worden, worden nergens anders bewaard.
+        ## Materiaal benamingen
+        Aangemaakte materiaal benamingen worden anoniem opgeslagen voor analyse
+        
+        """
+        st.markdown(f'{analitics}')
+    st.sidebar.markdown('---')
     st.sidebar.markdown('&emsp;gemaakt door:')
     st.sidebar.image('BIMnerd_Logo.png')
 
