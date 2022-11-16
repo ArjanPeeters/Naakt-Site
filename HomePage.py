@@ -168,6 +168,7 @@ def main():
     material_body = st.container()
     save_body = st.container()
 
+    st.sidebar.image('Logo NAA.K.T.png')
     st.sidebar.write('maak een NAA.K.T materiaal benaming aan')
     st.sidebar.write('of verander materialen van een ifc')
     st.sidebar.file_uploader('upload ifc', type=['ifc', 'ifczip'], key='uploaded_ifc_file',
@@ -175,7 +176,6 @@ def main():
 
     if not file_uploaded():
         with header_body:
-            st.image('Logo NAA.K.T.png')
             with st.expander('Over NAA.K.T.'):
                 naakt_explain = """
                 # NAA.K.T. Eenduidige materiaalbenaming
