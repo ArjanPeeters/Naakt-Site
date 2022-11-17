@@ -1,0 +1,7 @@
+[theme]
+base="dark"
+primaryColor="#0395a5"
+
+[server]
+port=5859
+maxUploadSize=512
