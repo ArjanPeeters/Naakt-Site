@@ -306,12 +306,15 @@ def main():
             st.markdown('---')
 
             if 'save_list' in session:
-                left, saved_list, right = st.columns([2, 8, 2])
+                left, saved_list, right = st.columns([1, 4, 1])
                 with saved_list:
                     for s in session.save_list:
                         st.code(s)
                 with left:
                     st.button('Empty', key='reset_list_pressed', on_click=reset_list)
+                with right:
+                    _string = '\n'.join(session['save_list'])
+                    st.download_button(label='download', data=f"{_string}")
 
     # st.write(session)
 
