@@ -18,6 +18,7 @@ def table():
     )
 
 
+@st.experimental_singleton
 def database():
     if 'database' not in session:
         path = 'NAAkt uitgebreid.json'
