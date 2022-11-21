@@ -9,7 +9,7 @@ import streamlit_nested_layout
 session = st.session_state
 
 
-@st.experimental_singleton
+# @st.experimental_singleton
 def table():
     return at.Table(
         api_key=st.secrets['airtable_key'],
@@ -18,7 +18,7 @@ def table():
     )
 
 
-@st.experimental_singleton
+# @st.experimental_singleton
 def database():
     if 'database' not in session:
         path = 'NAAkt uitgebreid.json'
