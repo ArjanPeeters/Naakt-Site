@@ -10,4 +10,5 @@ gen
 #IFC test files
 *.ifc
 test*
+*backup*
 secrets.toml

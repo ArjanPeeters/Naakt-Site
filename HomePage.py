@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import ifcopenshell
-import ifcopenshell.util.element as ue
 import csv
 import pyairtable as at
 import streamlit_nested_layout
@@ -25,34 +23,6 @@ def database():
         session['database'] = pd.read_json(path)
 
     return session['database']
-
-
-def callback_upload():
-    session['is_file_uploaded'] = True
-    try:
-        session['ifc_file'] = ifcopenshell.file.from_string(session['uploaded_ifc_file'].getvalue().decode('utf-8'))
-    except AttributeError:
-        st.error('Upload nieuwe file')
-
-
-def change(old=None, new=None):
-    old_material = old if old is not None else session['material_choice']
-    new_material = new if new is not None else naakt()
-
-    if 'material_changes' not in session:
-        session['material_changes'] = {}
-    session['material_changes'][old_material] = new_material
-    st.success('{old} -> {new}'.format(old=old_material, new=new_material))
-    session['materials'].change_name(old_material, new_material)
-
-    split_name = new_material.split('_')
-    send_dict = {}
-    _keys = ['naam', 'kenmerk', 'toepassing', 'extra_veld1', 'extra_veld2', 'extra_veld3']
-    for field in range(len(split_name)):
-        send_dict[_keys[field]] = split_name[field]
-    send_dict['oude_benaming'] = old_material
-    send_dict['benaming'] = new_material
-    table().create(send_dict)
 
 
 def naakt(return_dict=None):
@@ -118,110 +88,26 @@ def reset_list():
     session.save_list = []
 
 
-def upload_changes():
-    change_dict = pd.read_csv(session['uploaded_csv_file']).to_dict('records')
-    counter = 0
-    for material_change in change_dict:
-        change(old=material_change['oud'], new=material_change['nieuw'])
-        counter += 1
-
-    st.success(f'{counter} materialen aangepast')
-
-
-def file_uploaded():
-    if 'is_file_uploaded' in session and session['uploaded_ifc_file'] is not None:
-        return True
-    else:
-        return False
-
-
-class Materials:
-
-    def get_materials(self) -> dict:
-        materials_dict = {}
-        with st.spinner('Materialen ophalen...'):
-            for material in session['ifc_file'].by_type('IfcMaterial'):
-                materials_dict[material.Name] = material
-        return materials_dict
-
-    def __init__(self):
-        self.data = self.get_materials()
-        self.material_names = list(self.data.keys())
-
-    def change_name(self, old_name, new_name):
-        if old_name in self.material_names:
-            self.data[old_name].Name = new_name
-
-            if 'changed_items' not in session:
-                session['changed_items'] = {}
-            session['changed_items'][old_name] = new_name
-        elif new_name in self.material_names:
-            st.warning(f'{old_name} is al aangepast voor {new_name}')
-        else:
-            st.error(f'{old_name} bestaat niet')
-
-
 def main():
     st.set_page_config(page_title="Naa.K.T. Materiaal benaming")
+
+    st.sidebar.image('Logo NAA.K.T.png')
+    st.sidebar.markdown('---')
+    st.sidebar.markdown('&emsp;gemaakt door:')
+    st.sidebar.image('BIMnerd_Logo.png')
+    st.sidebar.markdown('---')
+    st.sidebar.write('Aangemaakte materiaal benamingen worden anoniem opgeslagen voor analyse')
 
     header_body = st.container()
     material_body = st.container()
     save_body = st.container()
 
-    st.sidebar.image('Logo NAA.K.T.png')
-    st.sidebar.write('maak een NAA.K.T materiaal benaming aan')
-    st.sidebar.write('of verander materialen van een ifc')
-    st.sidebar.file_uploader('upload ifc', type=['ifc', 'ifczip'], key='uploaded_ifc_file',
-                             on_change=callback_upload, label_visibility='collapsed')
-    sidebar_downloader = st.sidebar.container()  # for later filling with download buttons
-    st.sidebar.markdown('---')
-    with st.sidebar.expander('site analitycs'):
-        analitics = """
-        ## Modellen
-        Modellen die geupload worden, worden nergens anders bewaard.
-        ## Materiaal benamingen
-        Aangemaakte materiaal benamingen worden anoniem opgeslagen voor analyse
-        
-        """
-        st.markdown(f'{analitics}')
-    st.sidebar.markdown('---')
-    st.sidebar.markdown('&emsp;gemaakt door:')
-    st.sidebar.image('BIMnerd_Logo.png')
-
-
-    if not file_uploaded():
-        with header_body:
-            with st.expander('Over NAA.K.T.'):
-                naakt_explain = """
-                # NAA.K.T. Eenduidige materiaalbenaming
-                ## HÉT EZELSBRUGGETJE VOOR EENDUIDIGE MATERIAALBENAMING
-                Prefabbeton, gewapend beton, grindbeton, ihw, ihwg of tpg. Zelf snappen we allemaal wat die ander bedoelt, maar onze computers nog steeds niet. Tijd om daarvoor te zorgen. Rondom BIM maakten we in de BIM basis ILS al afspraken met elkaar om eenduidig samen te werken. Nu introduceren we een verdieping op een van die afspraken, in de vorm van eenduidige materiaalbenaming. Zo weten we branchebreed waar we het over hebben. En je computer ook.
-    
-                ## EENDUIDIGE MATERIAALBENAMING
-                Duurzaamheidsspecialisten, leveranciers, ontwikkelaars, bouwers en architecten hebben de handen ineengeslagen en een standaard ontwikkeld waarvan de bibliotheek zó helder en eenvoudig is dat die voor elke BIM-gebruiker duidelijk is, van modelleur tot eindgebruiker. Een eenduidige materiaalbenaming, die generiek genoeg om branchebreed toe te kunnen passen en specifiek genoeg om van toegevoegde waarde te zijn.
-    
-                ## WAT IS NAA.K.T.?
-                Het aanhouden van een vaste volgorde in de naamgeving zorgt voor betrouwbare data. Maar hoe onthoud je die volgorde? Simpel, met het ezelsbruggetje NAA.K.T.: NAAm_Kenmerk_Toepassing. In drie makkelijk te onthouden stappen leg je de essentie van een materiaal voortaan altijd helder en eenduidig vast.
-                
-                [Link naar meer informatie op de BIM Basis ILS site](https://www.bimloket.nl/p/682/1-NAAKT-Eenduidige-materiaalbenaming)
-                
-                """
-                st.markdown(naakt_explain)
-    else:
-        with header_body:
-
-            st.header("{name} - {longname}".format(name=session['ifc_file'].by_type('IfcProject')[0].Name,
-                                                   longname=session['ifc_file'].by_type('IfcProject')[0].LongName))
-            if 'material_choice' in session:
-                st.subheader('Verander: ' + session['material_choice'])
-                st.subheader('Naar: ' + naakt())
-            else:
-                st.subheader('Kies een materiaal')
+    header_body.write('maak een NAA.K.T materiaal benaming aan')
 
     with material_body:
 
-        if not file_uploaded():
-            st.code(naakt())
+
+        st.code(naakt())
 
         # build up main selectors in 3 big columns and 2 small columns for the '_'
 
@@ -263,59 +149,26 @@ def main():
                     st.button('-', on_click=min_pressed)
 
             with col_button:
-                if not file_uploaded():
-                    st.button('Save', key='save_pressed', on_click=save)
-                    st.checkbox('reset on save', key='reset on save')
-                else:
-                    st.button('Change', key='change_pressed', on_click=change)
+                st.button('Save', key='save_pressed', on_click=save)
+                st.checkbox('reset on save', key='reset on save')
 
         # Make extra section with columns so it builds up normaly on small screen width
 
-    if file_uploaded():
-        session['materials'] = Materials()
-        st.radio('kies', session['materials'].material_names, key='material_choice')
 
-        download_ready = sidebar_downloader.button('Maak IFC download aan')
-        if download_ready:
-            filename = f'{session.uploaded_ifc_file.name[:-4]}_aangepast.ifc'
-            data = session['ifc_file'].to_string()
-            sidebar_downloader.download_button(label='download IFC', data=data, mime='text/plain',
-                                       file_name=filename)
+    with save_body:
+        st.title('')
+        st.markdown('---')
 
-        col_upload_changes, col_download_changes = st.columns(2)
-
-        with col_upload_changes:
-            st.write('Upload csv bestand met aanpassingen')
-            st.file_uploader('upload csv', key='uploaded_csv_file', type=['.txt', '.csv'],
-                             on_change=upload_changes, label_visibility='collapsed')
-
-        if 'changed_items' in session:
-            with col_download_changes:
-                st.write('download aanpassingen voor hergebruik')
-                temp_dict = {'oud': session['changed_items'].keys(), 'nieuw': session['changed_items'].values()}
-                csv_file = pd.DataFrame(temp_dict).to_csv().encode('utf-8')
-                fn = f'Aanpassingen_{session.uploaded_ifc_file.name[:-4]}.csv'
-                st.download_button(label='download aanpassingen', data=csv_file, mime='application/octet-stream',
-                                   file_name=fn)
-            st.subheader('Aangepaste materialen:')
-            st.write('Oud: Nieuw')
-            st.write(session['changed_items'])
-
-    else:
-        with save_body:
-            st.title('')
-            st.markdown('---')
-
-            if 'save_list' in session:
-                left, saved_list, right = st.columns([1, 4, 1])
-                with saved_list:
-                    for s in session.save_list:
-                        st.code(s)
-                with left:
-                    st.button('Empty', key='reset_list_pressed', on_click=reset_list)
-                with right:
-                    _string = '\n'.join(session['save_list'])
-                    st.download_button(label='download', data=f"{_string}")
+        if 'save_list' in session:
+            left, saved_list, right = st.columns([1, 4, 1])
+            with saved_list:
+                for s in session.save_list:
+                    st.code(s)
+            with left:
+                st.button('Empty', key='reset_list_pressed', on_click=reset_list)
+            with right:
+                _string = '\n'.join(session['save_list'])
+                st.download_button(label='download', data=f"{_string}")
 
     # st.write(session)
 
