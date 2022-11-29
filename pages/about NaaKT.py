@@ -1,5 +1,4 @@
 import streamlit as st
-from HomePage import sidebar
 
 st.set_page_config(page_title="about Naa.K.T. Materiaal benaming",
                    layout='wide')
