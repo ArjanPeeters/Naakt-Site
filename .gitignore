@@ -12,3 +12,4 @@ gen
 test*
 *backup*
 secrets.toml
+config.toml
